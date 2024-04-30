@@ -1,0 +1,29 @@
+<template>
+    <div class="slds-grid  slds-wrap">
+        <div class="slds-col">
+            <lightning-input label="source" onchange={airlinesChange}></lightning-input>
+        </div>
+        <div class="slds-col">
+            <lightning-input label="Destination" onchange={airlinesChanges}></lightning-input>
+        </div>
+        <div class="slds-col">
+            <lightning-input label="Date" type="date" onchange={dateChange}></lightning-input>
+        </div>
+
+    </div>
+
+    <div>
+        <lightning-button label="Filter" onclick={filterData}></lightning-button>
+    </div>
+
+    <div>
+        <lightning-datatable
+            key-field="id"
+            data={flightList}
+            columns={columns}>
+        </lightning-datatable>
+    </div>
+     <!-- <c-other-flight-details fairlines={airlines} fdate={travDate}></c-other-flight-details>  -->
+   <!-- <c-related-booking flight={flightId}></c-related-booking> -->
+
+</template>

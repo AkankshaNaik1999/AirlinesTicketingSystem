@@ -1,0 +1,53 @@
+trigger FlightTrigger on Flights__c (before update, before insert, after update) {
+    
+    
+    if(trigger.isBefore && trigger.isInsert){
+        for(Flights__c ft: Trigger.new){
+            ft.Total_no_of_Reserved_Seats__c = 0;
+            ft.Remaining_seats__c = ft.Total_available_seats__c;
+        }
+    }
+
+
+  
+    if(trigger.isBefore && trigger.isUpdate){
+        for(Flights__c ft: Trigger.new){
+            if(ft.Approval_Status__c == 'Cancelled'){
+                ft.Total_no_of_Reserved_Seats__c = 0;
+                ft.Remaining_seats__c = 0;
+                ft.Total_available_seats__c = 0;
+            }
+        }
+    }    
+        if(trigger.isAfter && trigger.isUpdate){
+        
+        Map<Id, Flights__c> cancelledFlightsMap = new Map<ID, Flights__c>([Select Id,Approval_Status__c,BusinessClssFare__c,
+                                                                           EconomyClassFare__c,Total_no_of_Reserved_Seats__c,Remaining_seats__c,Total_available_seats__c
+                                                                           FROM Flights__c WHERE
+                                                                           Approval_Status__c = 'Cancelled' AND
+                                                                           Id in:Trigger.newMap.keySet()]);
+        System.debug( cancelledFlightsMap);
+        List<Booking__c> bookingsList = [Select Refund_Amount__c, Booking_status__c,Booking_Class__c, Flights__c
+                                         FROM Booking__c WHERE Flights__c in: cancelledFlightsMap.keySet()];
+        System.debug( bookingsList);
+        List<Booking__c> bookingupdtList = new List<Booking__c>();
+        if(bookingsList.size()>0){
+            for(Booking__c booking: bookingsList){  
+                
+                booking.Booking_status__c = 'Cancelled';
+                if(booking.Booking_Class__c == 'Business Class'){
+                    booking.Refund_Amount__c = cancelledFlightsMap.get(booking.Flights__c).BusinessClssFare__c;
+                }
+                else{
+                    booking.Refund_Amount__c = cancelledFlightsMap.get(booking.Flights__c).EconomyClassFare__c;
+                }
+                bookingupdtList.add(booking);
+            }
+            System.debug( bookingupdtList);
+            if(bookingupdtList.size()>0){
+                update bookingupdtList;
+            }       
+        }
+    }
+    
+}

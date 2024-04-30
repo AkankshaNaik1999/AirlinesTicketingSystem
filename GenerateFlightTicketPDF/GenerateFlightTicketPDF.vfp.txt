@@ -1,0 +1,45 @@
+<apex:page standardController="Flight_Ticket__c" extensions="GenerateFlightTicketPDFController" renderAs="pdf" >
+    <apex:image id="Logo" value="https://df9000001g0ejma0-dev-ed.develop.file.force.com/servlet/servlet.ImageServer?id=015F9000008Nhfc&oid=00DF9000001G0EJ&lastMod=1711550312000" />
+    <html>
+        <body>
+            <p>Dear {!Flight_Ticket__c.Passenger_Name__c},</p>
+            <p>We are excited to have you on board for your upcoming journey with us! 
+                This email serves as a confirmation of your travel details and some important information regarding your trip. </p>
+               
+            <p>
+                <b>Airlines:</b> {!Flight_Ticket__c.Airline__c}  <br/>
+                <b>Booking Reference:</b> {!Flight_Ticket__c.Booking_Id__c} <br/>
+                <b>Date of Journey:</b> {!Flight_Ticket__c.Travel_Date__c} <br/>
+                <b>Passenger Name(s):</b> {!Flight_Ticket__c.Passenger_Name__c} <br/>
+                <b>Departure:</b> {!Flight_Ticket__c.Departure__c} <br/>
+                <b>Departure Time:</b> {!Flight_Ticket__c.Arrival_Time__c} <br/>
+                <b>Arrival: </b>{!Flight_Ticket__c.Arrival__c} <br/>
+                <b>Arrival Time:</b> {!Flight_Ticket__c.Departure_Time__c}<br/>
+            </p>
+            <p>
+               <b>Check-in Information:</b> <br/><br/>
+                1. Online check-in is available 48 hours before the scheduled departure time.<br/>
+                2. Please ensure to check in online to save time and choose your preferred seat if you haven’t done so already.
+            </p>
+            <p>
+                <b>Important Notes:</b> <br/><br/>
+                1. Ensure your travel documents (passport, visas, etc.) are up to date.<br/>
+                2. Review travel advisories and requirements for your destination.<br/>
+                3. Arrive at the airport at least 2 hours before your scheduled departure.<br/><br/>
+                
+                For any changes to your booking or further assistance, please contact our customer service team at
+                [1941013007.akanksha@gmail.com] or call us at [9999-9999]. <br/>
+                
+                Thank you for choosing Sky Heights Airways. We look forward to providing you with a pleasant and 
+                safe travel experience.<br/><br/>
+                
+                Warm regards,<br/>
+                
+                Sky Heights Airways<br/>
+                1941013007.akanksha@gmail.com
+
+            </p>
+        </body>
+        <apex:image id="Logo2" value="https://df9000001g0ejma0-dev-ed.develop.file.force.com/servlet/servlet.ImageServer?id=015F9000008NgwX&oid=00DF9000001G0EJ&lastMod=1711428827000" />
+    </html>
+</apex:page>

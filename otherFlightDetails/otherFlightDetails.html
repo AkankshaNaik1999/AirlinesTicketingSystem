@@ -1,0 +1,15 @@
+<template>
+    <div class="slds-col">
+        <lightning-input label="Date" type="date" onchange={dateChange}></lightning-input>
+    </div>
+        <div>
+            <lightning-datatable
+                key-field="id"
+                data={flightList}
+                columns={columns}>
+            </lightning-datatable>
+        </div>
+        
+    
+    
+</template>

@@ -1,0 +1,15 @@
+<template>
+        <div>
+            <lightning-button label="New Flight" onclick={newFlight}></lightning-button>
+        </div>
+        <div>
+        <lightning-datatable
+            key-field="id"
+            data={flightList}
+            columns={columns}
+            onrowaction={handleRowAction}>
+        </lightning-datatable>
+     
+        </div>
+       
+    </template>

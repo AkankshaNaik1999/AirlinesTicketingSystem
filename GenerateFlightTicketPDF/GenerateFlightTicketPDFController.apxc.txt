@@ -1,0 +1,5 @@
+public class GenerateFlightTicketPDFController {
+    public GenerateFlightTicketPDFController(ApexPages.StandardController controller) {
+        Flight_Ticket__c ft = (Flight_Ticket__c)controller.getRecord();
+    }
+}

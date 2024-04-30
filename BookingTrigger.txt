@@ -1,0 +1,137 @@
+trigger BookingTrigger on Booking__c (before insert, after insert, after update, before update,after delete) {
+   
+
+    if(trigger.isBefore && trigger.isInsert ){
+        
+        Set<Id> passengerIds = new Set<Id>();                               
+        for(Booking__c bkng: trigger.new){
+            passengerIds.add(bkng.Passenger__c);
+        }
+        Map<Id,Passenger__c> relatedPassenger = new map<Id,Passenger__c>([SELECT Id, Name,Email__c FROM Passenger__c
+                                                                      WHERE Id IN :passengerIds]);
+        for(Booking__c bookng: trigger.new){
+            if(bookng.Passenger__c != null){
+                bookng.Passenger_Email__c = relatedPassenger.get(bookng.Passenger__c).Email__c;
+            } 
+        }
+    }
+
+
+    
+    //Req No. 19 - Update Remaining Seats and Reserved Seats once a booking is created or updated
+    if(trigger.isAfter && (trigger.isInsert || trigger.isUpdate)){
+        if(!trigger.new.IsEmpty()){
+            List<Flight_Ticket__c> flightTktsInsertList = new  List<Flight_Ticket__c>();
+            List<Flights__c> flightUpdtLst = new  List<Flights__c>();
+            Set<Id> flightsIdsSet = new Set<Id>();
+            String flightId;
+            Decimal totalBookings;
+            Decimal totalSeats;
+            List<String> statusList = new List<String>{'Cancelled'};
+            List<Booking__c> bookingsList = [Select Name,Booking_status__c,No_of_Seats__c,Passenger_Email__c,Flights__c
+                                             FROM Booking__c WHERE Id IN :trigger.new];
+           
+           for(Booking__c booking: bookingsList){
+               flightsIdsSet.add(booking.Flights__c);
+               //creating a new flight ticket record
+              if(booking.Booking_status__c == 'Confirmed'){
+                   Flight_Ticket__c flighttkt = new Flight_Ticket__c();
+                   flighttkt.Booking__c = booking.id;
+                   flighttkt.PassengerEmail__c = booking.Passenger_Email__c;// to be used in email alet field
+                   flightTktsInsertList.add(flighttkt);
+               }
+           }
+             
+            
+            List<AggregateResult> aggregateconfirmedList = [SELECT count(Id), SUM(No_of_Seats__c), Flights__c FROM Booking__c 
+                                                            WHERE Flights__c IN:flightsIdsSet AND Booking_Status__c='Confirmed'
+                                                            Group By Flights__c];
+            
+            List<Flights__c> flightsList = [Select Id, Remaining_Seats__c, Total_available_seats__c, Total_no_of_Reserved_Seats__c
+                                            FROM Flights__c WHERE ID IN:flightsIdsSet AND Approval_Status__c NOT IN: statusList];
+            System.debug(aggregateconfirmedList);
+           
+            if(!aggregateconfirmedList.isEmpty()){
+                for(AggregateResult ag : aggregateconfirmedList){
+                    flightId = (String)ag.get('Flights__c'); 
+                    totalBookings = (Decimal)ag.get('expr0');
+                    totalSeats = (Decimal)ag.get('expr1');
+                    if(flightsList.size()>0){
+                        for (Flights__c flt: flightsList){
+                            if(flt.Id == flightId){ 
+                                flt.Total_no_of_Reserved_Seats__c = (totalSeats);
+                                flt.Remaining_Seats__c = flt.Total_available_seats__c - (totalSeats);
+                                flightUpdtLst.add(flt);
+                            }
+                        }
+                    }
+                }
+            }
+           
+            if(!flightUpdtLst.isEmpty()){
+                update flightUpdtLst;
+            }
+            if(!flightTktsInsertList.isEmpty()){
+                insert flightTktsInsertList;
+            }
+        }
+    }
+    
+    
+    if(trigger.isBefore && trigger.isUpdate){
+        Integer daysDifference;
+        for(Booking__c booking : Trigger.new) {
+            
+            if(booking.Booking_status__c == 'Cancelled' ) {
+                
+                daysDifference = Date.today().daysBetween(booking.Flight_Date__c);
+                if(daysDifference >= 5) {
+                    booking.Refund_Amount__c = booking.Amount__c;
+                    
+                }
+                else if (daysDifference >= 2 && daysDifference <= 4) {
+                    booking.Refund_Amount__c = 0.75*booking.Amount__c;
+                    
+                } else if (daysDifference == 1) {
+                    booking.Refund_Amount__c = 0.5*booking.Amount__c;
+                    
+                } else {
+                    booking.Refund_Amount__c = 0 ;
+                }
+            }
+        }
+    }
+    
+    if(trigger.isAfter && trigger.isDelete){
+        
+        List<Flights__c> flightUpdtList = new  List<Flights__c>();
+        Set<Id> flightsIdsSet = new Set<Id>();
+        String flightId;
+        Decimal totalBookings;
+        Decimal totalSeats;
+        for(Booking__c booking: trigger.old){
+            flightsIdsSet.add(booking.Flights__c);
+        }
+        List<AggregateResult> aggregateconfirmedList = [SELECT count(Id), SUM(No_of_Seats__c), Flights__c FROM Booking__c 
+                                                            WHERE Flights__c IN:flightsIdsSet AND Booking_Status__c='Confirmed'
+                                                            Group By Flights__c];
+        List<Flights__c> flightsList = [Select Id, Remaining_Seats__c, Total_available_seats__c, Total_no_of_Reserved_Seats__c
+                                        FROM Flights__c WHERE ID in:flightsIdsSet];
+        System.debug(aggregateconfirmedList);
+        for(AggregateResult ag : aggregateconfirmedList){
+            flightId = (String)ag.get('Flights__c'); 
+            totalBookings = (Decimal)ag.get('expr0');
+            totalSeats = (Decimal)ag.get('expr1');
+            for (Flights__c flt: flightsList){
+                if(flt.Id == flightId){ 
+                    flt.Total_no_of_Reserved_Seats__c = (totalSeats);
+                    flt.Remaining_Seats__c = flt.Total_available_seats__c - (totalSeats);
+                    flightUpdtList.add(flt);
+                }
+            }
+        }
+         if(!flightUpdtList.isEmpty()){
+                update flightUpdtList;
+            }
+    }
+}
